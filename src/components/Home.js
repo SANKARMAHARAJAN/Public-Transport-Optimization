@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 const Home = () => {
   const backgroundStyle = {
-    backgroundImage: "url('https://img.freepik.com/premium-photo/smart-transport-technology-concept-future-car-traffic-newish-city-road_31965-134707.jpg?w=2000')",
+    backgroundImage: "url('https://web-assets.bcg.com/d3/dc/ff2806e24ee09f35f85222724590/solving-the-mobility-challenge-in-megacities-rectangle-opt.jpg')",
     backgroundSize: 'cover',
     backgroundRepeat: 'no-repeat',
     backgroundPosition: 'center',

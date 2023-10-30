@@ -28,7 +28,7 @@ const Login = ({ match }) => {
           />
         </div>
 
-        <button type="submit" className="btn btn-primary">Login</button>
+        <Link to="/user" className="btn btn-primary">Login</Link>
       </form>
 
       <p className="mt-3">Don't have an account? <Link to="/register">Register here</Link></p>
