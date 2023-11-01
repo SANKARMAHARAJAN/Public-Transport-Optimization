@@ -1,0 +1,123 @@
+Source Code :
+import time
+import serial
+import RPi.GPIO as GPIO
+# Define the GPIO pins for the LCD
+lcd_rs = 12
+lcd_en = 11
+lcd_d4 = 5
+lcd_d5 = 4
+lcd_d6 = 3
+lcd_d7 = 2
+
+# Set up the GPIO mode and pin setup
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(lcd_rs, GPIO.OUT)
+GPIO.setup(lcd_en, GPIO.OUT)
+GPIO.setup(lcd_d4, GPIO.OUT)
+GPIO.setup(lcd_d5, GPIO.OUT)
+GPIO.setup(lcd_d6, GPIO.OUT)
+GPIO.setup(lcd_d7, GPIO.OUT)
+
+# Define the LCD column and row size
+lcd_columns = 16
+lcd_rows = 2
+
+# Create functions for sending data to the LCD
+def lcd_byte(bits, mode):
+    GPIO.output(lcd_rs, mode)
+    GPIO.output(lcd_d4, False)
+    GPIO.output(lcd_d5, False)
+    GPIO.output(lcd_d6, False)
+    GPIO.output(lcd_d7, False)
+    if bits & 0x10 == 0x10:
+        GPIO.output(lcd_d4, True)
+    if bits & 0x20 == 0x20:
+        GPIO.output(lcd_d5, True)
+    if bits & 0x40 == 0x40:
+        GPIO.output(lcd_d6, True)
+    if bits & 0x80 == 0x80:
+        GPIO.output(lcd_d7, True)
+    lcd_toggle_enable()
+    GPIO.output(lcd_d4, False)
+    GPIO.output(lcd_d5, False)
+    GPIO.output(lcd_d6, False)
+    GPIO.output(lcd_d7, False)
+    if bits & 0x01 == 0x01:
+        GPIO.output(lcd_d4, True)
+    if bits & 0x02 == 0x02:
+        GPIO.output(lcd_d5, True)
+    if bits & 0x04 == 0x04:
+        GPIO.output(lcd_d6, True)
+    if bits & 0x08 == 0x08:
+        GPIO.output(lcd_d7, True)
+    lcd_toggle_enable()
+
+def lcd_toggle_enable():
+    time.sleep(0.0005)
+    GPIO.output(lcd_en, True)
+    time.sleep(0.0005)
+    GPIO.output(lcd_en, False)
+    time.sleep(0.0005)
+
+def lcd_string(message):
+    message = message.ljust(lcd_columns, " ")
+    for i in range(lcd_columns):
+        lcd_byte(ord(message[i]), GPIO.HIGH)
+
+# Open a serial port for communication with the GPS
+ser = serial.Serial('/dev/ttyS0', 9600, timeout=1)
+
+# Set up the LCD display
+GPIO.output(lcd_rs, GPIO.LOW)
+lcd_byte(0x33, GPIO.LOW)
+lcd_byte(0x32, GPIO.LOW)
+lcd_byte(0x28, GPIO.LOW)
+lcd_byte(0x0C, GPIO.LOW)
+lcd_byte(0x06, GPIO.LOW)
+lcd_byte(0x01, GPIO.LOW)
+
+try:
+    while True:
+        gps_data = ser.readline().decode('utf-8')
+        print("Data from GPS:")
+        print(gps_data)
+        # Extract LAT, LOG, VEL from GPS data as needed
+        LAT = 0x10
+        LOG = 0x20
+        VEL = 0x30
+        lcd_string("Lat:{} Long:{} Vel:{}".format(LAT, LOG, VEL))
+        time.sleep(1)
+except KeyboardInterrupt:
+    pass
+finally:
+    ser.close()
+    GPIO.cleanup()
+
+JSON code :
+import time
+import board
+import digitalio
+import busio
+
+# Define the LED pin
+led = digitalio.DigitalInOut(board.D13)
+led.direction = digitalio.Direction.OUTPUT
+
+# Create a software serial port
+uart = busio.UART(board.TX, board.RX, baudrate=9600)
+
+values = [
+    0x20, 0x40, 0x42, 0x41, 0x13, 0x10, 0x60, 0x42,
+    0x60, 0x00, 0x00, 0x41, 0x15, 0x10, 0x55, 0x42,
+    0x00, 0x00, 0x60, 0x42, 0x41, 0x15, 0x20, 0x45,
+    0xB0, 0x00, 0x00, 0x41
+]
+
+while True:
+    for value in values:
+        uart.write(bytearray([value]))
+        led.value = True  # Turn on the LED
+        time.sleep(0.5)
+        led.value = False  # Turn off the LED
+        time.sleep(0.5)
